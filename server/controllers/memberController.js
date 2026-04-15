@@ -3,34 +3,60 @@ import Member from "../models/memberModel.js";
 // 🔹 Create Member
 export const createMember = async (req, res) => {
   try {
+    console.log(req.body);
     const { name, phone, joinDate, planDuration } = req.body;
 
+    console.log("Incoming data:", req.body); // 🔥 DEBUG
+
+    // Validate
     if (!name || !phone || !planDuration) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Calculate expiry date
+    // Convert planDuration to number ✅
+    const duration = Number(planDuration);
+
+    if (isNaN(duration)) {
+      return res.status(400).json({ message: "Invalid plan duration" });
+    }
+
+    // Handle join date safely
     const startDate = joinDate ? new Date(joinDate) : new Date();
+
+    if (isNaN(startDate)) {
+      return res.status(400).json({ message: "Invalid join date" });
+    }
+
+    // Calculate expiry
     const expiryDate = new Date(startDate);
-    expiryDate.setDate(expiryDate.getDate() + planDuration);
+    expiryDate.setDate(expiryDate.getDate() + duration);
+
+    const status = expiryDate > new Date() ? "active" : "expired";
 
     const member = new Member({
       name,
       phone,
       joinDate: startDate,
-      planDuration,
+      planDuration: duration,
       expiryDate,
+      status,
     });
 
     const savedMember = await member.save();
 
     res.status(201).json(savedMember);
   } catch (error) {
+    console.error("ERROR:", error);
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: "Phone number already exists",
+      });
+    }
+
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 // 🔹 Get All Members
 export const getAllMembers = async (req, res) => {
@@ -41,8 +67,6 @@ export const getAllMembers = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 // 🔹 Get Single Member
 export const getMemberById = async (req, res) => {
@@ -58,8 +82,6 @@ export const getMemberById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 // 🔹 Update Member
 export const updateMember = async (req, res) => {
@@ -95,8 +117,6 @@ export const updateMember = async (req, res) => {
   }
 };
 
-
-
 // 🔹 Delete Member
 export const deleteMember = async (req, res) => {
   try {
@@ -113,8 +133,6 @@ export const deleteMember = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 // 🔹 Get Expired Members
 export const getExpiredMembers = async (req, res) => {

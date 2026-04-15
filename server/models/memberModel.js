@@ -42,17 +42,7 @@ const memberSchema = new mongoose.Schema(
 );
 
 // 🔹 Auto-update status before saving
-memberSchema.pre("save", function (next) {
-  const today = new Date();
 
-  if (this.expiryDate < today) {
-    this.status = "expired";
-  } else {
-    this.status = "active";
-  }
-
-  next();
-});
 
 const Member = mongoose.model("Member", memberSchema);
 
