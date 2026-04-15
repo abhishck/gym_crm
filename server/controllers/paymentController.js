@@ -62,3 +62,53 @@ export const getPaymentsByMember = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// 🔹 Get Revenue Stats (Monthly + Yearly)
+export const getRevenueStats = async (req, res) => {
+  try {
+    const now = new Date();
+
+    // Start of month
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Start of year
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+    // 🔸 Monthly Revenue
+    const monthlyRevenue = await Payment.aggregate([
+      {
+        $match: {
+          paymentDate: { $gte: startOfMonth },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$amount" },
+        },
+      },
+    ]);
+
+    // 🔸 Yearly Revenue
+    const yearlyRevenue = await Payment.aggregate([
+      {
+        $match: {
+          paymentDate: { $gte: startOfYear },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$amount" },
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      monthlyRevenue: monthlyRevenue[0]?.total || 0,
+      yearlyRevenue: yearlyRevenue[0]?.total || 0,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
