@@ -4,7 +4,7 @@ import {
   markAttendance,
   getAttendanceByMember,
   getTodayAttendance,
-} from "../controllers/attendanceController.js";
+} from "../controllers/attandanceController.js";
 
 const router = express.Router();
 

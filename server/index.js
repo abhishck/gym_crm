@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import dbConnection from "./config/dbConfig.js";
+import cors from "cors"
 
 import memberRoutes from "./routes/memberRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
@@ -14,6 +15,7 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(cors());
 
 const PORT = process.env.PORT || 3001;
 
