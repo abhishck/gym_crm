@@ -35,14 +35,21 @@ const memberSchema = new mongoose.Schema(
       enum: ["active", "expired"],
       default: "active",
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    isRenewed: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // 🔹 Auto-update status before saving
-
 
 const Member = mongoose.model("Member", memberSchema);
 
