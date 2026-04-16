@@ -107,6 +107,26 @@ export const getPaymentsByMember = async (req, res) => {
   }
 };
 
+// 🔹 Delete Payment
+export const deletePayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const payment = await Payment.findById(id);
+
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+
+    await Payment.findByIdAndDelete(id);
+
+    res.status(200).json({ message: "Payment deleted successfully" });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // 🔹 Get Revenue Stats (Monthly + Yearly)
 export const getRevenueStats = async (req, res) => {
   try {
