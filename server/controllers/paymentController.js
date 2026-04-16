@@ -3,8 +3,6 @@ import Member from "../models/memberModel.js";
 
 
 // 🔹 Add Payment
-import Payment from "../models/paymentModel.js";
-import Member from "../models/memberModel.js";
 
 export const addPayment = async (req, res) => {
   try {
