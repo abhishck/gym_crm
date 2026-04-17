@@ -19,11 +19,10 @@ const Payments = () => {
   });
 
   const [loading, setLoading] = useState(false);
+
   const indexOfLast = currentPage * paymentsPerPage;
   const indexOfFirst = indexOfLast - paymentsPerPage;
-
   const currentPayments = payments.slice(indexOfFirst, indexOfLast);
-
   const totalPages = Math.ceil(payments.length / paymentsPerPage);
 
   useEffect(() => {
@@ -32,25 +31,32 @@ const Payments = () => {
   }, []);
 
   useEffect(() => {
-  if (currentPage > totalPages) {
-    setCurrentPage(totalPages || 1);
-  }
-}, [payments]);
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages || 1);
+    }
+  }, [payments]);
 
-  // ✅ Auto-select member from URL
- useEffect(() => {
-  const memberIdFromURL = searchParams.get("memberId");
+  // ✅ FIXED: Auto-select member + default amount
+  useEffect(() => {
+    const memberIdFromURL = searchParams.get("member")
 
-  if (memberIdFromURL && members.length > 0) {
-    setForm((prev) => ({
-      ...prev,
+    if (!memberIdFromURL || members.length === 0) return;
+
+    const memberExists = members.find((m) => m._id === memberIdFromURL);
+
+    if (!memberExists) return;
+
+    setForm({
       memberId: memberIdFromURL,
-    }));
+      amount: 500, // default amount (you can customize)
+      method: "cash",
+    });
 
-    // remove query param after use
+    // Optional: remove query param after use
     navigate("/payments", { replace: true });
-  }
-}, [searchParams, members]);
+
+  }, [searchParams, members, navigate]);
+
   const fetchMembers = async () => {
     try {
       const res = await API.get("/members");
@@ -77,35 +83,19 @@ const Payments = () => {
 
     try {
       await API.delete(`/payments/${id}`);
-      fetchPayments(); // refresh list
+      fetchPayments();
     } catch (err) {
       console.error(err);
-      alert("Error deleting payment");
+      toast.error("Error deleting payment");
     }
   };
 
-  // ✅ MEMBER MAP (fast lookup)
+  // ✅ Member map
   const memberMap = useMemo(() => {
     const map = new Map();
     members.forEach((m) => map.set(m._id, m));
     return map;
   }, [members]);
-
-  // ✅ Auto-fill amount when member changes (basic logic)
-  useEffect(() => {
-    if (!form.memberId) return;
-
-    const member = memberMap.get(form.memberId);
-    if (!member) return;
-
-    // 🔥 You can improve this later with plan-based pricing
-    if (!form.amount) {
-      setForm((prev) => ({
-        ...prev,
-        amount: 500, // default amount (change if needed)
-      }));
-    }
-  }, [form.memberId, memberMap]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -138,7 +128,6 @@ const Payments = () => {
 
       fetchPayments();
 
-      // ✅ Redirect back to Members after 1 sec
       navigate("/members", { replace: true });
     } catch (err) {
       console.error(err);
@@ -228,11 +217,7 @@ const Payments = () => {
                   : memberMap.get(p.memberId);
 
               return (
-                <tr
-                  key={p._id}
-                  className="border-t hover:bg-gray-50 transition"
-                >
-                  {/* Member */}
+                <tr key={p._id} className="border-t hover:bg-gray-50">
                   <td className="p-4 font-medium">
                     {member ? (
                       member.name
@@ -243,39 +228,22 @@ const Payments = () => {
                     )}
                   </td>
 
-                  {/* Amount */}
-                  <td className="p-4 font-semibold text-gray-800">
-                    ₹{p.amount}
-                  </td>
+                  <td className="p-4 font-semibold">₹{p.amount}</td>
 
-                  {/* Method Badge */}
                   <td className="p-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        p.method === "cash"
-                          ? "bg-green-100 text-green-600"
-                          : p.method === "upi"
-                            ? "bg-blue-100 text-blue-600"
-                            : "bg-purple-100 text-purple-600"
-                      }`}
-                    >
+                    <span className="px-3 py-1 rounded-full text-xs bg-gray-100">
                       {p.method}
                     </span>
                   </td>
 
-                  {/* Date + Time */}
-                  <td className="p-4 text-gray-600 text-sm">
-                    {new Date(p.paymentDate).toLocaleDateString()}
-                    <div className="text-xs text-gray-400">
-                      {new Date(p.paymentDate).toLocaleTimeString()}
-                    </div>
+                  <td className="p-4 text-sm text-gray-600">
+                    {new Date(p.paymentDate).toLocaleString()}
                   </td>
 
-                  {/* Actions */}
                   <td className="p-4 text-right">
                     <button
                       onClick={() => deletePayment(p._id)}
-                      className="p-2 rounded-lg hover:bg-red-100 text-red-500 transition"
+                      className="p-2 hover:bg-red-100 text-red-500 rounded"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -285,53 +253,53 @@ const Payments = () => {
             })}
           </tbody>
         </table>
-        <div className="flex justify-between items-center mt-4">
-          {/* Page Info */}
-          <p className="text-sm text-gray-500">
-            Page {currentPage} of {totalPages}
-          </p>
 
-          {/* Buttons */}
-          <div className="flex gap-2">
-            {/* Prev */}
-            <button
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => prev - 1)}
-              className="px-3 py-1 rounded-lg border disabled:opacity-50"
-            >
-              Prev
-            </button>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center p-4">
+            <p className="text-sm text-gray-500">
+              Page {currentPage} of {totalPages}
+            </p>
 
-            {/* Page Numbers */}
-            {[...Array(totalPages)].map((_, i) => (
+            <div className="flex gap-2">
               <button
-                key={i}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded-lg border ${
-                  currentPage === i + 1 ? "bg-black text-white" : "bg-white"
-                }`}
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+                className="px-3 py-1 border rounded disabled:opacity-50"
               >
-                {i + 1}
+                Prev
               </button>
-            ))}
 
-            {/* Next */}
-            <button
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-              className="px-3 py-1 rounded-lg border disabled:opacity-50"
-            >
-              Next
-            </button>
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`px-3 py-1 rounded border ${
+                    currentPage === i + 1
+                      ? "bg-black text-white"
+                      : "bg-white"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+                className="px-3 py-1 border rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Empty State */}
         {payments.length === 0 && (
-          <div className="text-center p-8 text-gray-500">No payments found</div>
-        )}
-        {payments.length === 0 && (
-          <div className="text-center p-6 text-gray-500">No payments found</div>
+          <div className="text-center p-6 text-gray-500">
+            No payments found
+          </div>
         )}
       </div>
     </div>
