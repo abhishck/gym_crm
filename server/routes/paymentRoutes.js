@@ -25,6 +25,7 @@ router.get("/:memberId", getPaymentsByMember);
 
 router.delete("/:id", deletePayment);
 
-router.get("/:id", getPaymentById);
+// get single payment for viewing
+router.get("/single/:id", getPaymentById);
 
 export default router;

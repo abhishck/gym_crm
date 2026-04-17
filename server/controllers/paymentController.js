@@ -129,13 +129,20 @@ export const deletePayment = async (req, res) => {
 
 export const getPaymentById = async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.id).populate("memberId");
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid payment ID" });
+    }
+
+    const payment = await Payment.findById(id).populate("memberId");
 
     if (!payment) {
       return res.status(404).json({ message: "Payment not found" });
     }
 
     return res.status(200).json(payment);
+
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
