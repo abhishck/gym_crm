@@ -7,6 +7,7 @@ import memberRoutes from "./routes/memberRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import smsRoutes from "./routes/smsRoutes.js";
 
 dotenv.config();
 dbConnection();
@@ -23,6 +24,7 @@ const PORT = process.env.PORT || 3001;
 app.use("/api/members", memberRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/sms", smsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {
