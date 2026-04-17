@@ -112,18 +112,18 @@ export const deletePayment = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const payment = await Payment.findById(id);
+    const deleted = await Payment.findByIdAndDelete(id);
 
-    if (!payment) {
+    if (!deleted) {
       return res.status(404).json({ message: "Payment not found" });
     }
 
-    await Payment.findByIdAndDelete(id);
-
-    res.status(200).json({ message: "Payment deleted successfully" });
+    return res.status(200).json({
+      message: "Payment deleted successfully",
+    });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
