@@ -38,17 +38,19 @@ const Payments = () => {
 }, [payments]);
 
   // ✅ Auto-select member from URL
-  useEffect(() => {
-    const memberIdFromURL = searchParams.get("memberId");
+ useEffect(() => {
+  const memberIdFromURL = searchParams.get("memberId");
 
-    if (memberIdFromURL) {
-      setForm((prev) => ({
-        ...prev,
-        memberId: memberIdFromURL,
-      }));
-    }
-  }, [searchParams]);
+  if (memberIdFromURL && members.length > 0) {
+    setForm((prev) => ({
+      ...prev,
+      memberId: memberIdFromURL,
+    }));
 
+    // remove query param after use
+    navigate("/payments", { replace: true });
+  }
+}, [searchParams, members]);
   const fetchMembers = async () => {
     try {
       const res = await API.get("/members");
