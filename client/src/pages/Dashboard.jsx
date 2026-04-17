@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import API from "../services/Api";
 import Card from "../components/Card";
@@ -12,6 +13,10 @@ const Dashboard = () => {
   // 🔹 Expiring pagination state
   const [expPage, setExpPage] = useState(1);
   const expPerPage = 3;
+
+  // 🔹 SMS state
+  const [sendingId, setSendingId] = useState(null);
+  const [bulkSending, setBulkSending] = useState(false);
 
   useEffect(() => {
     fetchDashboard();
@@ -38,6 +43,48 @@ const Dashboard = () => {
       setRevenueData(grouped);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // 🔹 Send SMS (single)
+  const handleSendSMS = async (member) => {
+    try {
+      setSendingId(member._id);
+
+      await API.post("/sms/send", {
+        memberId: member._id,
+        message: `Hi ${member.name}, your gym membership is expiring on ${new Date(
+          member.expiryDate
+        ).toLocaleDateString()}. Please renew soon.`,
+      });
+
+      alert(`SMS sent to ${member.name}`);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to send SMS");
+    } finally {
+      setSendingId(null);
+    }
+  };
+
+  // 🔹 Bulk SMS
+  const handleBulkSMS = async () => {
+    try {
+      setBulkSending(true);
+
+      for (let member of data.expiringSoon) {
+        await API.post("/sms/send", {
+          memberId: member._id,
+          message: `Hi ${member.name}, your membership expires soon. Renew now.`,
+        });
+      }
+
+      alert("All SMS sent!");
+    } catch (err) {
+      console.error(err);
+      alert("Bulk SMS failed");
+    } finally {
+      setBulkSending(false);
     }
   };
 
@@ -79,7 +126,19 @@ const Dashboard = () => {
     <div className="space-y-6 p-6">
 
       {/* 🔷 Header */}
-      <h2 className="text-2xl font-semibold">Dashboard</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold">Dashboard</h2>
+
+        {data.expiringSoon.length > 0 && (
+          <button
+            onClick={handleBulkSMS}
+            disabled={bulkSending}
+            className="text-sm px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+          >
+            {bulkSending ? "Sending..." : "Send All Reminders"}
+          </button>
+        )}
+      </div>
 
       {/* 🔷 Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -119,11 +178,30 @@ const Dashboard = () => {
                   key={member._id}
                   className="flex justify-between items-center p-3 rounded-xl hover:bg-gray-50 transition"
                 >
-                  <span className="font-medium">{member.name}</span>
+                  {/* Left */}
+                  <div>
+                    <p className="font-medium">{member.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(member.expiryDate).toLocaleDateString()}
+                    </p>
+                  </div>
 
-                  <span className="text-sm px-3 py-1 rounded-full bg-red-100 text-red-600">
-                    {new Date(member.expiryDate).toLocaleDateString()}
-                  </span>
+                  {/* Right */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-600">
+                      Expiring
+                    </span>
+
+                    <button
+                      onClick={() => handleSendSMS(member)}
+                      disabled={sendingId === member._id}
+                      className="text-xs px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
+                    >
+                      {sendingId === member._id
+                        ? "Sending..."
+                        : "Send SMS"}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

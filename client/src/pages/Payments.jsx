@@ -38,7 +38,7 @@ const Payments = () => {
 
   // ✅ FIXED: Auto-select member + default amount
   useEffect(() => {
-    const memberIdFromURL = searchParams.get("member")
+    const memberIdFromURL = searchParams.get("member");
 
     if (!memberIdFromURL || members.length === 0) return;
 
@@ -54,7 +54,6 @@ const Payments = () => {
 
     // Optional: remove query param after use
     navigate("/payments", { replace: true });
-
   }, [searchParams, members, navigate]);
 
   const fetchMembers = async () => {
@@ -77,22 +76,53 @@ const Payments = () => {
     }
   };
 
- const deletePayment = async (id) => {
-  const confirmDelete = window.confirm("Delete this payment?");
-  if (!confirmDelete) return;
+  const deletePayment = async (id) => {
+    console.log("🟡 Delete clicked for ID:", id);
 
-  try {
-    await API.delete(`/payments/${id}`);
+    const confirmDelete = window.confirm("Delete this payment?");
+    if (!confirmDelete) {
+      console.log("❌ User cancelled delete");
+      return;
+    }
 
-    // 🔥 instant UI update (IMPORTANT)
-    setPayments((prev) => prev.filter((p) => p._id !== id));
+    try {
+      console.log("🚀 Sending DELETE request...");
 
-    toast.success("Payment deleted");
-  } catch (err) {
-    console.error(err);
-    toast.error("Error deleting payment");
-  }
-};
+      const res = await API.delete(`/payments/${id}`);
+
+      console.log("✅ Delete API response:", res);
+      console.log("📦 Response data:", res.data);
+
+      // 🔥 check if backend actually confirmed delete
+      if (res.status !== 200 && res.status !== 204) {
+        console.warn("⚠️ Unexpected status:", res.status);
+      }
+
+      // 🔥 instant UI update
+      setPayments((prev) => {
+        const filtered = prev.filter((p) => p._id !== id);
+        console.log("🧹 Updated payments list:", filtered);
+        return filtered;
+      });
+
+      toast.success("Payment deleted successfully");
+    } catch (err) {
+      console.error("❌ DELETE ERROR FULL:", err);
+
+      // Axios detailed debug
+      if (err.response) {
+        console.log("📌 Error status:", err.response.status);
+        console.log("📌 Error data:", err.response.data);
+        console.log("📌 Error headers:", err.response.headers);
+      } else if (err.request) {
+        console.log("📡 No response received:", err.request);
+      } else {
+        console.log("⚠️ Axios setup error:", err.message);
+      }
+
+      toast.error("Error deleting payment");
+    }
+  };
 
   // ✅ Member map
   const memberMap = useMemo(() => {
@@ -245,12 +275,25 @@ const Payments = () => {
                   </td>
 
                   <td className="p-4 text-right">
-                    <button
-                      onClick={() => deletePayment(p._id)}
-                      className="p-2 hover:bg-red-100 text-red-500 rounded"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <div className="flex justify-end gap-2">
+                      {/* 👁 View Button */}
+                      <button
+                        onClick={() => navigate(`/payments/view/${p._id}`)}
+                        className="p-2 hover:bg-blue-100 text-blue-600 rounded"
+                        title="View Payment"
+                      >
+                        👁
+                      </button>
+
+                      {/* 🗑 Delete Button */}
+                      <button
+                        onClick={() => deletePayment(p._id)}
+                        className="p-2 hover:bg-red-100 text-red-500 rounded"
+                        title="Delete Payment"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -279,9 +322,7 @@ const Payments = () => {
                   key={i}
                   onClick={() => setCurrentPage(i + 1)}
                   className={`px-3 py-1 rounded border ${
-                    currentPage === i + 1
-                      ? "bg-black text-white"
-                      : "bg-white"
+                    currentPage === i + 1 ? "bg-black text-white" : "bg-white"
                   }`}
                 >
                   {i + 1}
@@ -301,9 +342,7 @@ const Payments = () => {
 
         {/* Empty State */}
         {payments.length === 0 && (
-          <div className="text-center p-6 text-gray-500">
-            No payments found
-          </div>
+          <div className="text-center p-6 text-gray-500">No payments found</div>
         )}
       </div>
     </div>
