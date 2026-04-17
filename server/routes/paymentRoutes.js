@@ -23,6 +23,6 @@ router.get("/revenue", getRevenueStats);
 // Get payments for a specific member
 router.get("/:memberId", getPaymentsByMember);
 
-router.delete("/payments/:id", deletePayment);
+router.delete("/:id", deletePayment);
 
 export default router;

@@ -61,28 +61,31 @@ export const createMember = async (req, res) => {
 // 🔹 Get All Members
 export const getAllMembers = async (req, res) => {
   try {
-  const members = await Member.find({ isDeleted: false }).sort({ createdAt: -1 });
+    const members = await Member.find({ isDeleted: false }).sort({
+      createdAt: -1,
+    });
 
-const today = new Date();
+    const today = new Date();
 
-const updatedMembers = await Promise.all(
-  members.map(async (member) => {
-    let newStatus = member.expiryDate > today ? "active" : "expired";
+    const updatedMembers = await Promise.all(
+      members.map(async (member) => {
+        const newStatus =
+          new Date(member.expiryDate) > today ? "active" : "expired";
 
-    // 🔥 Only update if changed
-    if (member.status !== newStatus) {
-      member.status = newStatus;
-      await member.save();
-    }
+        // 🔥 Only update if changed
+        if (member.status !== newStatus) {
+          member.status = newStatus;
+          await member.save();
+        }
 
-    return member;
-  })
-);
+        return member;
+      })
+    );
 
-res.status(200).json(updatedMembers);
-    res.status(200).json(members);
+    return res.status(200).json(updatedMembers); // ✅ ONLY ONE RESPONSE
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
