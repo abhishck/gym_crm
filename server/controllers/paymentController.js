@@ -127,6 +127,20 @@ export const deletePayment = async (req, res) => {
   }
 };
 
+export const getPaymentById = async (req, res) => {
+  try {
+    const payment = await Payment.findById(req.params.id).populate("memberId");
+
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+
+    return res.status(200).json(payment);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 // 🔹 Get Revenue Stats (Monthly + Yearly)
 export const getRevenueStats = async (req, res) => {
   try {

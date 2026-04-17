@@ -1,5 +1,5 @@
 import express from "express";
-import { deletePayment, getRevenueStats } from "../controllers/paymentController.js";
+import { deletePayment, getPaymentById, getRevenueStats } from "../controllers/paymentController.js";
 
 
 
@@ -24,5 +24,7 @@ router.get("/revenue", getRevenueStats);
 router.get("/:memberId", getPaymentsByMember);
 
 router.delete("/:id", deletePayment);
+
+router.get("/:id", getPaymentById);
 
 export default router;
