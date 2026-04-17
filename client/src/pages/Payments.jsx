@@ -77,18 +77,22 @@ const Payments = () => {
     }
   };
 
-  const deletePayment = async (id) => {
-    const confirmDelete = window.confirm("Delete this payment?");
-    if (!confirmDelete) return;
+ const deletePayment = async (id) => {
+  const confirmDelete = window.confirm("Delete this payment?");
+  if (!confirmDelete) return;
 
-    try {
-      await API.delete(`/payments/${id}`);
-      fetchPayments();
-    } catch (err) {
-      console.error(err);
-      toast.error("Error deleting payment");
-    }
-  };
+  try {
+    await API.delete(`/payments/${id}`);
+
+    // 🔥 instant UI update (IMPORTANT)
+    setPayments((prev) => prev.filter((p) => p._id !== id));
+
+    toast.success("Payment deleted");
+  } catch (err) {
+    console.error(err);
+    toast.error("Error deleting payment");
+  }
+};
 
   // ✅ Member map
   const memberMap = useMemo(() => {
