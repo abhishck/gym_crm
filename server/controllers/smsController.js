@@ -1,5 +1,5 @@
 import { sendSMS } from "../services/smsService.js";
-import Member from "../models/Member.js"; // if needed
+import Member from "../models/memberModel.js"; // if needed
 
 export const sendSMSController = async (req, res) => {
   try {
