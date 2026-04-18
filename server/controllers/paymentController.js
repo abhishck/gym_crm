@@ -29,37 +29,51 @@ export const addPayment = async (req, res) => {
 
     await payment.save();
 
-    // 🔥 MEMBERSHIP LOGIC (FIXED)
+    // ==============================
+    // 🔥 ADVANCED MEMBERSHIP LOGIC
+    // ==============================
 
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    // Normalize dates (remove time)
-    const todayOnly = new Date(today.setHours(0, 0, 0, 0));
-    const expiry = member.expiryDate
+    const oldExpiry = member.expiryDate
       ? new Date(member.expiryDate)
       : null;
 
-    const expiryOnly = expiry
-      ? new Date(expiry.setHours(0, 0, 0, 0))
-      : null;
-
-    let startDate;
-
-    if (expiryOnly && expiryOnly >= todayOnly) {
-      // ✅ Active → extend
-      startDate = new Date(expiryOnly);
-    } else {
-      // ✅ Expired → start fresh
-      startDate = new Date(todayOnly);
+    if (oldExpiry) {
+      oldExpiry.setHours(0, 0, 0, 0);
     }
 
-    // 🔥 Use member planDuration (fallback 30)
-    const duration = member.planDuration || 30;
+    // 🔹 Plan duration (default 30)
+    const planDays = member.planDuration || 30;
 
-    const newExpiry = new Date(startDate);
-    newExpiry.setDate(newExpiry.getDate() + duration);
+    let newExpiry;
 
-    // ✅ Update member
+    // ✅ CASE 1: ACTIVE MEMBER → extend from expiry
+    if (oldExpiry && oldExpiry >= today) {
+      newExpiry = new Date(oldExpiry);
+      newExpiry.setDate(oldExpiry.getDate() + planDays);
+    }
+
+    // ✅ CASE 2: EXPIRED MEMBER → deduct expired days
+    else if (oldExpiry && oldExpiry < today) {
+      const expiredDays = Math.ceil(
+        (today - oldExpiry) / (1000 * 60 * 60 * 24)
+      );
+
+      const adjustedDays = Math.max(planDays - expiredDays, 0);
+
+      newExpiry = new Date(today);
+      newExpiry.setDate(today.getDate() + adjustedDays);
+    }
+
+    // ✅ CASE 3: No previous expiry (new member)
+    else {
+      newExpiry = new Date(today);
+      newExpiry.setDate(today.getDate() + planDays);
+    }
+
+    // 🔹 Update member
     member.expiryDate = newExpiry;
     member.status = "active";
 
@@ -69,6 +83,7 @@ export const addPayment = async (req, res) => {
       message: "Payment added & membership updated",
       payment,
       member,
+      newExpiry,
     });
 
   } catch (error) {
@@ -76,7 +91,6 @@ export const addPayment = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 
 // 🔹 Get All Payments
