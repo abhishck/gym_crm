@@ -29,4 +29,9 @@ router.put("/:id", updateMember);
 // Delete member
 router.delete("/:id", deleteMember);
 
+// recently deleted page
+router.get("/deleted", getDeletedMembers);
+router.patch("/restore/:id", restoreMember);
+router.delete("/permanent/:id", permanentlyDeleteMember);
+
 export default router;

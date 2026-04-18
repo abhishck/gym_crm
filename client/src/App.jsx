@@ -10,6 +10,7 @@ import Attendance from "./pages/Attendance";
 import EditMember from "./pages/EditMember";
 import Login from "./components/Login.jsx";
 import PaymentView from "./pages/PaymentView.jsx";
+import RecentlyDeleted from "./pages/RecentlyDeleted.jsx";
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
           <Route path="attendance" element={<Attendance />} />
           <Route path="edit-member/:id" element={<EditMember />} />
           <Route path="payments/view/:id" element={<PaymentView />} />
+          <Route path="/deleted-members" element={<RecentlyDeleted/>} />
         </Route>
 
       </Routes>

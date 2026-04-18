@@ -13,6 +13,8 @@ const Members = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
 
+  const [deletingId, setDeletingId] = useState(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,13 +31,13 @@ const Members = () => {
       const res = await API.get("/members");
       setMembers(res.data);
     } catch (err) {
-      console.error(err);
+      console.error("Fetch error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ UPDATED STATUS FUNCTION (with days)
+  // ✅ STATUS FUNCTION
   const getStatus = (expiryDate) => {
     const today = new Date();
     const expiry = new Date(expiryDate);
@@ -66,7 +68,7 @@ const Members = () => {
       data = data.filter(
         (m) =>
           m.name.toLowerCase().includes(search.toLowerCase()) ||
-          m.phone.includes(search)
+          (m.phone && m.phone.includes(search))
       );
     }
 
@@ -94,11 +96,35 @@ const Members = () => {
     currentPage * itemsPerPage
   );
 
-  // ✅ DELETE
-  const deleteMember = async (id) => {
+  // ✅ DELETE (ONLY EXPIRED)
+  const deleteMember = async (member) => {
+    const status = getStatus(member.expiryDate);
+
+    if (status.label !== "expired") {
+      alert("Only expired members can be deleted");
+      return;
+    }
+
     if (!window.confirm("Delete this member?")) return;
-    await API.delete(`/members/${id}`);
-    fetchMembers();
+
+    try {
+      setDeletingId(member._id);
+
+      await API.delete(`/members/${member._id}`);
+
+      // 🔥 Optimistic UI update
+      setMembers((prev) =>
+        prev.filter((m) => m._id !== member._id)
+      );
+
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert(
+        err?.response?.data?.message || "Failed to delete member"
+      );
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -185,6 +211,7 @@ const Members = () => {
             ) : (
               paginatedMembers.map((m) => {
                 const status = getStatus(m.expiryDate);
+                const isExpired = status.label === "expired";
 
                 return (
                   <tr key={m._id} className="border-t hover:bg-gray-50">
@@ -199,7 +226,7 @@ const Members = () => {
                       {new Date(m.expiryDate).toLocaleDateString()}
                     </td>
 
-                    {/* ✅ STATUS WITH DAYS */}
+                    {/* STATUS */}
                     <td>
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium
@@ -219,7 +246,8 @@ const Members = () => {
 
                     {/* ACTIONS */}
                     <td className="pr-4">
-                      <div className="flex justify-end gap-3">
+                      <div className="flex justify-end gap-3 items-center">
+
                         <button
                           onClick={() =>
                             navigate(`/edit-member/${m._id}`)
@@ -238,12 +266,28 @@ const Members = () => {
                           Renew
                         </button>
 
+                        {/* 🔥 DELETE BUTTON */}
                         <button
-                          onClick={() => deleteMember(m._id)}
-                          className="text-red-600 hover:scale-110"
+                          onClick={() => deleteMember(m)}
+                          disabled={!isExpired || deletingId === m._id}
+                          title={
+                            !isExpired
+                              ? "Only expired members can be deleted"
+                              : "Delete member"
+                          }
+                          className={`transition ${
+                            !isExpired
+                              ? "text-gray-300 cursor-not-allowed"
+                              : "text-red-600 hover:scale-110"
+                          }`}
                         >
-                          <Trash2 size={18} />
+                          {deletingId === m._id ? (
+                            <span className="text-xs">...</span>
+                          ) : (
+                            <Trash2 size={18} />
+                          )}
                         </button>
+
                       </div>
                     </td>
                   </tr>
