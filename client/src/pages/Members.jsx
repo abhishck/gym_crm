@@ -45,9 +45,7 @@ const Members = () => {
     today.setHours(0, 0, 0, 0);
     expiry.setHours(0, 0, 0, 0);
 
-    const diffDays = Math.ceil(
-      (expiry - today) / (1000 * 60 * 60 * 24)
-    );
+    const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) {
       return { label: "expired", days: Math.abs(diffDays) };
@@ -68,14 +66,12 @@ const Members = () => {
       data = data.filter(
         (m) =>
           m.name.toLowerCase().includes(search.toLowerCase()) ||
-          (m.phone && m.phone.includes(search))
+          (m.phone && m.phone.includes(search)),
       );
     }
 
     if (statusFilter !== "all") {
-      data = data.filter(
-        (m) => getStatus(m.expiryDate).label === statusFilter
-      );
+      data = data.filter((m) => getStatus(m.expiryDate).label === statusFilter);
     }
 
     data.sort((a, b) => {
@@ -93,7 +89,7 @@ const Members = () => {
 
   const paginatedMembers = filteredMembers.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   // ✅ DELETE (ONLY EXPIRED)
@@ -113,15 +109,10 @@ const Members = () => {
       await API.delete(`/members/${member._id}`);
 
       // 🔥 Optimistic UI update
-      setMembers((prev) =>
-        prev.filter((m) => m._id !== member._id)
-      );
-
+      setMembers((prev) => prev.filter((m) => m._id !== member._id));
     } catch (err) {
       console.error("Delete error:", err);
-      alert(
-        err?.response?.data?.message || "Failed to delete member"
-      );
+      alert(err?.response?.data?.message || "Failed to delete member");
     } finally {
       setDeletingId(null);
     }
@@ -129,22 +120,31 @@ const Members = () => {
 
   return (
     <div className="p-6 space-y-4">
-
       {/* HEADER */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Members</h1>
 
-        <button
-          onClick={() => navigate("/add-member")}
-          className="bg-black text-white px-4 py-2 rounded-xl hover:opacity-90"
-        >
-          + Add Member
-        </button>
+        <div className="flex gap-3">
+          {/* 🔥 Recently Deleted Button */}
+          <button
+            onClick={() => navigate("/deleted-members")}
+            className="border px-4 py-2 rounded-xl text-sm hover:bg-gray-100"
+          >
+            Recently Deleted
+          </button>
+
+          {/* Add Member */}
+          <button
+            onClick={() => navigate("/add-member")}
+            className="bg-black text-white px-4 py-2 rounded-xl hover:opacity-90"
+          >
+            + Add Member
+          </button>
+        </div>
       </div>
 
       {/* FILTERS */}
       <div className="bg-white p-4 rounded-2xl shadow-sm flex flex-wrap gap-4 items-center">
-        
         {/* Search */}
         <div className="flex items-center border rounded-xl px-3 py-2 w-full md:w-64">
           <Search size={18} className="text-gray-400" />
@@ -171,9 +171,7 @@ const Members = () => {
 
         {/* Sort */}
         <button
-          onClick={() =>
-            setSortBy(sortBy === "name" ? "expiryDate" : "name")
-          }
+          onClick={() => setSortBy(sortBy === "name" ? "expiryDate" : "name")}
           className="flex items-center gap-2 border px-3 py-2 rounded-xl"
         >
           <ArrowUpDown size={16} />
@@ -218,13 +216,9 @@ const Members = () => {
                     <td className="p-4 font-medium">{m.name}</td>
                     <td>{m.phone}</td>
 
-                    <td>
-                      {new Date(m.joinDate).toLocaleDateString()}
-                    </td>
+                    <td>{new Date(m.joinDate).toLocaleDateString()}</td>
 
-                    <td>
-                      {new Date(m.expiryDate).toLocaleDateString()}
-                    </td>
+                    <td>{new Date(m.expiryDate).toLocaleDateString()}</td>
 
                     {/* STATUS */}
                     <td>
@@ -234,8 +228,8 @@ const Members = () => {
                           status.label === "active"
                             ? "bg-green-100 text-green-700"
                             : status.label === "expired"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-yellow-100 text-yellow-700"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-yellow-100 text-yellow-700"
                         }`}
                       >
                         {status.label === "expired"
@@ -247,20 +241,15 @@ const Members = () => {
                     {/* ACTIONS */}
                     <td className="pr-4">
                       <div className="flex justify-end gap-3 items-center">
-
                         <button
-                          onClick={() =>
-                            navigate(`/edit-member/${m._id}`)
-                          }
+                          onClick={() => navigate(`/edit-member/${m._id}`)}
                           className="text-blue-600 hover:scale-110"
                         >
                           <Pencil size={18} />
                         </button>
 
                         <button
-                          onClick={() =>
-                            navigate(`/payments?member=${m._id}`)
-                          }
+                          onClick={() => navigate(`/payments?member=${m._id}`)}
                           className="text-green-600 text-xs font-medium"
                         >
                           Renew
@@ -287,7 +276,6 @@ const Members = () => {
                             <Trash2 size={18} />
                           )}
                         </button>
-
                       </div>
                     </td>
                   </tr>
@@ -301,7 +289,6 @@ const Members = () => {
       {/* PAGINATION */}
       {filteredMembers.length > 0 && (
         <div className="flex flex-col md:flex-row justify-between items-center gap-3">
-
           <p className="text-sm text-gray-500">
             Showing{" "}
             <span className="font-medium">
@@ -311,16 +298,12 @@ const Members = () => {
             <span className="font-medium">
               {Math.min(currentPage * itemsPerPage, filteredMembers.length)}
             </span>{" "}
-            of{" "}
-            <span className="font-medium">{filteredMembers.length}</span>
+            of <span className="font-medium">{filteredMembers.length}</span>
           </p>
 
           <div className="flex items-center gap-2">
-
             <button
-              onClick={() =>
-                setCurrentPage((p) => Math.max(p - 1, 1))
-              }
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               disabled={currentPage === 1}
               className="px-3 py-1.5 border rounded-lg text-sm disabled:opacity-50"
             >
@@ -332,9 +315,7 @@ const Members = () => {
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
                 className={`px-3 py-1.5 text-sm rounded-lg ${
-                  currentPage === i + 1
-                    ? "bg-black text-white"
-                    : "border"
+                  currentPage === i + 1 ? "bg-black text-white" : "border"
                 }`}
               >
                 {i + 1}
@@ -342,17 +323,12 @@ const Members = () => {
             ))}
 
             <button
-              onClick={() =>
-                setCurrentPage((p) =>
-                  Math.min(p + 1, totalPages)
-                )
-              }
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               disabled={currentPage === totalPages}
               className="px-3 py-1.5 border rounded-lg text-sm disabled:opacity-50"
             >
               Next
             </button>
-
           </div>
         </div>
       )}
