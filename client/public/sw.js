@@ -1,7 +1,20 @@
+const CACHE_NAME = "gym-crm-v1";
+
 self.addEventListener("install", (event) => {
-  console.log("Service Worker installed");
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll([
+        "/",
+        "/index.html",
+      ]);
+    })
+  );
 });
 
 self.addEventListener("fetch", (event) => {
-  // basic caching later
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
+  );
 });
