@@ -48,24 +48,46 @@ const Dashboard = () => {
 
   // 🔹 Send SMS (single)
   const handleSendSMS = async (member) => {
-    try {
-      setSendingId(member._id);
+  try {
+    console.log("📩 Sending SMS...");
+    console.log("👤 Member:", member);
 
-      await API.post("/sms/send", {
-        memberId: member._id,
-        message: `Hi ${member.name}, your gym membership is expiring on ${new Date(
-          member.expiryDate
-        ).toLocaleDateString()}. Please renew soon.`,
-      });
+    setSendingId(member._id);
 
-      alert(`SMS sent to ${member.name}`);
-    } catch (error) {
-      console.error(error);
-      alert("Failed to send SMS");
-    } finally {
-      setSendingId(null);
+    const payload = {
+      memberId: member._id,
+      message: `Hi ${member.name}, your gym membership is expiring on ${new Date(
+        member.expiryDate
+      ).toLocaleDateString()}. Please renew soon.`,
+    };
+
+    console.log("📦 Payload:", payload);
+
+    const response = await API.post("/sms/send", payload);
+
+    console.log("✅ Response:", response.data);
+
+    alert(`SMS sent to ${member.name}`);
+  } catch (error) {
+    console.error("❌ SMS Error Full:", error);
+
+    // 🔍 Detailed debug
+    if (error.response) {
+      console.error("📛 Server Error Data:", error.response.data);
+      console.error("📛 Status Code:", error.response.status);
+      console.error("📛 Headers:", error.response.headers);
+    } else if (error.request) {
+      console.error("📡 No response received:", error.request);
+    } else {
+      console.error("⚙️ Error Message:", error.message);
     }
-  };
+
+    alert("Failed to send SMS");
+  } finally {
+    setSendingId(null);
+    console.log("🔚 SMS process finished");
+  }
+};
 
   // 🔹 Bulk SMS
   const handleBulkSMS = async () => {
