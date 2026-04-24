@@ -7,6 +7,9 @@ import {
   updateMember,
   deleteMember,
   getExpiredMembers,
+  getDeletedMembers,
+  restoreMember,
+  permanentlyDeleteMember
 } from "../controllers/memberController.js";
 
 const router = express.Router();
